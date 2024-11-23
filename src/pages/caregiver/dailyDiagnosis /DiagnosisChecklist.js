@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {useDiagnosis} from "../../../context/DiagnosisContext";
 
 const DiagnosisChecklist = () => {
+    const { updateDiagnosisData } = useDiagnosis();
+
     const navigate = useNavigate();
     const [isValid, setIsValid] = useState(false);
 
@@ -19,14 +22,50 @@ const DiagnosisChecklist = () => {
         excited: false
     });
 
+    // 의식 수준 매핑
+    const consciousnessMapping = {
+        clear: 'CLEAR',
+        drowsy: 'DROWSY',
+        confused: 'CONFUSED',
+        semicoma: 'SEMICOMA'
+    };
+
+    // 행동 변화 매핑
+    const behaviorMapping = {
+        normal: 'SAME_AS_USUAL',
+        anxiety: 'ANXIETY',
+        depression: 'DEPRESSION',
+        excited: 'EXCITED'
+    };
+
+
     useEffect(() => {
-        // 각 섹션에서 하나 이상 선택되었는지 확인
         const hasConsciousnessSelected = Object.values(consciousnessLevel).some(value => value);
         const hasBehaviorSelected = Object.values(behaviorChanges).some(value => value);
 
-        // 두 섹션 모두에서 하나 이상 선택되어야 유효
+        if (hasConsciousnessSelected && hasBehaviorSelected) {
+            // Context 업데이트
+            let selectedConsciousness = '';
+            let selectedBehavior = '';
+
+            // 선택된 의식 수준 찾기
+            Object.entries(consciousnessLevel).forEach(([key, value]) => {
+                if (value) selectedConsciousness = consciousnessMapping[key];
+            });
+
+            // 선택된 행동 변화 찾기
+            Object.entries(behaviorChanges).forEach(([key, value]) => {
+                if (value) selectedBehavior = behaviorMapping[key];
+            });
+
+            updateDiagnosisData('consciousnessDTO', {
+                consciousnessLevel: selectedConsciousness,
+                moodBehaviour: selectedBehavior
+            });
+        }
+
         setIsValid(hasConsciousnessSelected && hasBehaviorSelected);
-    }, [consciousnessLevel, behaviorChanges]);
+    }, [consciousnessLevel, behaviorChanges, updateDiagnosisData]);
 
     const CheckItem = ({ label, checked, onChange }) => (
         <button

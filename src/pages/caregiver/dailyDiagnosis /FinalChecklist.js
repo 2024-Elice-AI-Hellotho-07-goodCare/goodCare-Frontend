@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loading from "../../../common/component/Loading";
+import { useDiagnosis } from '../../../context/DiagnosisContext';
+import {postDailyCheckInput} from "../../../app/api/common";
 
 const FinalChecklist = () => {
     const navigate = useNavigate();
@@ -9,24 +11,54 @@ const FinalChecklist = () => {
     const [note, setNote] = useState('');
     const [medication, setMedication] = useState(null);
     const [sideEffects, setSideEffects] = useState(null);
+    const { diagnosisData, updateDiagnosisData } = useDiagnosis();
 
     useEffect(() => {
         // 모든 필수 항목이 선택되었는지 확인
         setIsValid(medication !== null && sideEffects !== null);
-    }, [medication, sideEffects]);
 
-    const handleSubmit = () => {
+        // Context 업데이트
+        if (medication !== null && sideEffects !== null) {
+            updateDiagnosisData('medicationsDTO', {
+                medicationTaken: medication === 'complete',
+                sideEffects: sideEffects === 'yes' ? '있음' : '없음'
+            });
+        }
+    }, [medication, sideEffects, updateDiagnosisData]);
+
+    // 특이사항이 변경될 때마다 Context 업데이트
+    useEffect(() => {
+        updateDiagnosisData('specialNotesDTO', {
+            specialNotes: note,
+            caregiverNotes: note
+        });
+    }, [note, updateDiagnosisData]);
+
+    const handleSubmit = async () => {
         if (!isValid) return;
         setIsLoading(true);
-        setTimeout(() => {
-            navigate('/diagnosis/result');
-        }, 2000);
+
+        try {
+            // API 호출
+            const patientCode = "PATIENT_CODE"; // 실제 환자 코드로 대체 필요
+            const response = await postDailyCheckInput(patientCode, diagnosisData);
+
+            // 응답 처리
+            if (response) {
+                setTimeout(() => {
+                    navigate('/diagnosis/result', { state: { data: response } });
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('일일 진단 제출 실패:', error);
+            // 에러 처리 로직 추가
+            setIsLoading(false);
+        }
     };
 
     if (isLoading) {
         return (
             <Loading
-                spinnerSize="w-32 h-32"
                 message={
                     <>
                         진단 결과를<br />
@@ -83,7 +115,7 @@ const FinalChecklist = () => {
 
                 {/* 아침 약 복용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3 ">아침 약 복용 여부</h3>
+                    <h3 className="text-gray-600 mb-3">아침 약 복용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '미완료', value: 'incomplete'},
@@ -96,7 +128,7 @@ const FinalChecklist = () => {
 
                 {/* 복용하는 약 부작용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3 ">복용하는 약 부작용 여부</h3>
+                    <h3 className="text-gray-600 mb-3">복용하는 약 부작용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '있음', value: 'yes'},
@@ -104,7 +136,6 @@ const FinalChecklist = () => {
                         ]}
                         value={sideEffects}
                         onChange={setSideEffects}
-
                     />
                 </div>
 
