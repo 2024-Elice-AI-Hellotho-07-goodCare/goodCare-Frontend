@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loading from "../../../common/component/Loading";
-import DiagnosisHeader from "./DiagnosisHeader";
+import { useDiagnosis } from '../../../context/DiagnosisContext';
+import {postDailyCheckInput} from "../../../app/api/common";
 
 const FinalChecklist = () => {
     const navigate = useNavigate();
@@ -10,24 +11,58 @@ const FinalChecklist = () => {
     const [note, setNote] = useState('');
     const [medication, setMedication] = useState(null);
     const [sideEffects, setSideEffects] = useState(null);
+    const { diagnosisData, updateDiagnosisData, patientInfo } = useDiagnosis();
+
+    const updateMedicationData = useCallback(() => {
+        if (medication !== null && sideEffects !== null) {
+            updateDiagnosisData('medicationsDTO', {
+                medicationTaken: medication === 'complete',
+                sideEffects: sideEffects === 'yes' ? '있음' : '없음'
+            });
+        }
+    }, [medication, sideEffects, updateDiagnosisData]);
+
+    const updateNotesData = useCallback(() => {
+        updateDiagnosisData('specialNotesDTO', {
+            specialNotes: note,
+            caregiverNotes: note
+        });
+    }, [note, updateDiagnosisData]);
 
     useEffect(() => {
-        // 모든 필수 항목이 선택되었는지 확인
         setIsValid(medication !== null && sideEffects !== null);
-    }, [medication, sideEffects]);
+        updateMedicationData();
+    }, [medication, sideEffects, updateMedicationData]);
 
-    const handleSubmit = () => {
+    useEffect(() => {
+        updateNotesData();
+    }, [updateNotesData]);
+
+    const handleSubmit = async () => {
         if (!isValid) return;
         setIsLoading(true);
-        setTimeout(() => {
-            navigate('/diagnosis/result');
-        }, 2000);
+
+        try {
+            // API 호출
+            const patientCode = "PATIENT_CODE"; // 실제 환자 코드로 대체 필요
+            const response = await postDailyCheckInput(patientCode, diagnosisData);
+
+            // 응답 처리
+            if (response) {
+                setTimeout(() => {
+                    navigate('/diagnosis/result', { state: { data: response } });
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('일일 진단 제출 실패:', error);
+            // 에러 처리 로직 추가
+            setIsLoading(false);
+        }
     };
 
     if (isLoading) {
         return (
             <Loading
-                spinnerSize="w-32 h-32"
                 message={
                     <>
                         진단 결과를<br />
@@ -66,16 +101,25 @@ const FinalChecklist = () => {
 
     return (
         <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
-            <DiagnosisHeader />
+            <div className="fixed top-0 left-0 right-0 bg-[#E9EEEA] z-50">
+                <div className="h-14 flex items-center justify-between px-4 border-b">
+                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
+                        ←
+                    </button>
+                    <span className="absolute left-1/2 -translate-x-1/2 font-medium">
+                        일일 진단하기
+                    </span>
+                </div>
+            </div>
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 <h2 className="text-xl font-bold mb-8">
-                    성원님의 기타 확인 사항을 체크해주세요.
+                    {patientInfo?.name}님의 신체 상태를 체크해주세요.
                 </h2>
 
                 {/* 아침 약 복용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3 ">아침 약 복용 여부</h3>
+                    <h3 className="text-gray-600 mb-3">아침 약 복용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '미완료', value: 'incomplete'},
@@ -88,7 +132,7 @@ const FinalChecklist = () => {
 
                 {/* 복용하는 약 부작용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3 ">복용하는 약 부작용 여부</h3>
+                    <h3 className="text-gray-600 mb-3">복용하는 약 부작용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '있음', value: 'yes'},
@@ -96,7 +140,6 @@ const FinalChecklist = () => {
                         ]}
                         value={sideEffects}
                         onChange={setSideEffects}
-
                     />
                 </div>
 

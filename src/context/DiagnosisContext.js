@@ -1,9 +1,10 @@
 // src/context/DiagnosisContext.js
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const DiagnosisContext = createContext();
 
 export const DiagnosisProvider = ({ children }) => {
+    const [patientInfo, setPatientInfo] = useState(null);
     const [diagnosisData, setDiagnosisData] = useState({
         dailyCheckListDTO: {
             createdAt: new Date().toISOString().split('T')[0]
@@ -36,6 +37,23 @@ export const DiagnosisProvider = ({ children }) => {
         }
     });
 
+    useEffect(() => {
+        const fetchPatientInfo = async () => {
+            try {
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/patient/info/get/name`);
+                const result = await response.json();
+
+                if (result.success) {
+                    setPatientInfo(result.data[0].patient);
+                }
+            } catch (error) {
+                console.error('Failed to fetch patient info:', error);
+            }
+        };
+
+        fetchPatientInfo();
+    }, []);
+
     const updateDiagnosisData = (section, data) => {
         setDiagnosisData(prev => ({
             ...prev,
@@ -47,7 +65,11 @@ export const DiagnosisProvider = ({ children }) => {
     };
 
     return (
-        <DiagnosisContext.Provider value={{ diagnosisData, updateDiagnosisData }}>
+        <DiagnosisContext.Provider value={{
+            diagnosisData,
+            updateDiagnosisData,
+            patientInfo
+        }}>
             {children}
         </DiagnosisContext.Provider>
     );

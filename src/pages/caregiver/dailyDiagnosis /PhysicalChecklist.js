@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DiagnosisHeader from "./DiagnosisHeader";
+import {useDiagnosis} from "../../../context/DiagnosisContext";
 
 const PhysicalChecklist = () => {
     const navigate = useNavigate();
     const [isValid, setIsValid] = useState(false);
+    const { updateDiagnosisData, patientInfo } = useDiagnosis();
+
 
     const [skinConditions, setSkinConditions] = useState({
         normal: false,
@@ -26,15 +29,61 @@ const PhysicalChecklist = () => {
         needHelp: false
     });
 
+    // 상태 매핑
+    const skinMapping = {
+        normal: 'NORMAL',
+        rash: 'RASH',
+        swelling: 'SWELLING',
+        bedsore: 'BEDSORE'
+    };
+
+    const painMapping = {
+        none: 'NONE',
+        mild: 'MILD',
+        moderate: 'MODERATE',
+        severe: 'SEVERE'
+    };
+
+    const mobilityMapping = {
+        normal: 'NORMAL',
+        limited: 'LIMITED',
+        needHelp: 'NEED_HELP'
+    };
+
     useEffect(() => {
-        // 각 섹션에서 하나 이상 선택되었는지 확인
         const hasSkinSelected = Object.values(skinConditions).some(value => value);
         const hasPainSelected = Object.values(painStatus).some(value => value);
         const hasMovementSelected = Object.values(movementStatus).some(value => value);
 
-        // 모든 섹션에서 하나 이상 선택되어야 유효
+        if (hasSkinSelected && hasPainSelected && hasMovementSelected) {
+            // Context 업데이트
+            let selectedSkin = '';
+            let selectedPain = '';
+            let selectedMobility = '';
+
+            // 선택된 값 찾기
+            Object.entries(skinConditions).forEach(([key, value]) => {
+                if (value) selectedSkin = skinMapping[key];
+            });
+
+            Object.entries(painStatus).forEach(([key, value]) => {
+                if (value) selectedPain = painMapping[key];
+            });
+
+            Object.entries(movementStatus).forEach(([key, value]) => {
+                if (value) selectedMobility = mobilityMapping[key];
+            });
+
+            updateDiagnosisData('physicalStatusDTO', {
+                skinCondition: selectedSkin,
+                painLevel: selectedPain,
+                painLocation: '', // 필요한 경우 별도의 입력 필드 추가
+                mobility: selectedMobility
+            });
+        }
+
         setIsValid(hasSkinSelected && hasPainSelected && hasMovementSelected);
-    }, [skinConditions, painStatus, movementStatus]);
+    }, [skinConditions, painStatus, movementStatus, updateDiagnosisData]);
 
     const CheckItem = ({ label, checked, onChange }) => (
         <button
@@ -59,7 +108,7 @@ const PhysicalChecklist = () => {
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 <h2 className="text-xl font-bold mb-8">
-                    성원님의 신체 상태를 체크해주세요.
+                    {patientInfo?.name}님의 신체 상태를 체크해주세요.
                 </h2>
 
                 {/* 피부 상태 섹션 */}

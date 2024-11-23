@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DiagnosisHeader from "./DiagnosisHeader";
+import {useDiagnosis} from "../../../context/DiagnosisContext";
 
 const DiagnosisInput = () => {
     const navigate = useNavigate();
+    const { updateDiagnosisData } = useDiagnosis();
+    const { patientInfo } = useDiagnosis();
+
+
     const [formData, setFormData] = useState({
         temperature: '',
         pressureHigh: '',
@@ -28,10 +33,24 @@ const DiagnosisInput = () => {
     }, [formData]);
 
     const handleInputChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormData(prev => {
+            const newData = {
+                ...prev,
+                [field]: value
+            };
+
+            // Context 업데이트
+            updateDiagnosisData('vitalSignsDTO', {
+                temperature: Number(newData.temperature) || 0,
+                bloodPressureSys: Number(newData.pressureHigh) || 0,
+                bloodPressureDia: Number(newData.pressureLow) || 0,
+                pulse: Number(newData.pulse) || 0,
+                oxygen: Number(newData.oxygen) || 0,
+                respirationRate: Number(newData.breathing) || 0
+            });
+
+            return newData;
+        });
     };
 
     return (

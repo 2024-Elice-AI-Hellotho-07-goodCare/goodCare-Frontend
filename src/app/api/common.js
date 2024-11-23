@@ -1,9 +1,48 @@
+
+
 /**
  * Daily Check Input API
  * @param {string} code - Patient code (required)
  * @param {Object} data - Daily check data
  * @returns {Promise} API response
  */
+
+export const getPatientInfo = async () => {
+    try {
+        console.log('Requesting to:', `${process.env.REACT_APP_API_URL}/patient/info/get/name?name=최예준`);
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/patient/info/get/name?name=최예준`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('Error response:', errorData);
+            throw new Error(`API request failed: ${response.status} ${errorData}`);
+        }
+
+        const result = await response.json();
+        console.log('API response:', result);
+
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to get patient info');
+        }
+
+        return result.data;
+
+    } catch (error) {
+        console.error('Detailed error:', error);
+        throw error;
+    }
+};
+
+
 export const postDailyCheckInput = async (code, data) => {
     try {
         const response = await fetch(`/patient/daily-check/input?code=${code}`, {
