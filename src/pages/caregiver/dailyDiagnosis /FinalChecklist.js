@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loading from "../../../common/component/Loading";
-import { useDiagnosis } from '../../../context/DiagnosisContext';
-import {postDailyCheckInput} from "../../../app/api/common";
+import DiagnosisHeader from "./DiagnosisHeader";
 
 const FinalChecklist = () => {
     const navigate = useNavigate();
@@ -11,54 +10,24 @@ const FinalChecklist = () => {
     const [note, setNote] = useState('');
     const [medication, setMedication] = useState(null);
     const [sideEffects, setSideEffects] = useState(null);
-    const { diagnosisData, updateDiagnosisData } = useDiagnosis();
 
     useEffect(() => {
         // 모든 필수 항목이 선택되었는지 확인
         setIsValid(medication !== null && sideEffects !== null);
+    }, [medication, sideEffects]);
 
-        // Context 업데이트
-        if (medication !== null && sideEffects !== null) {
-            updateDiagnosisData('medicationsDTO', {
-                medicationTaken: medication === 'complete',
-                sideEffects: sideEffects === 'yes' ? '있음' : '없음'
-            });
-        }
-    }, [medication, sideEffects, updateDiagnosisData]);
-
-    // 특이사항이 변경될 때마다 Context 업데이트
-    useEffect(() => {
-        updateDiagnosisData('specialNotesDTO', {
-            specialNotes: note,
-            caregiverNotes: note
-        });
-    }, [note, updateDiagnosisData]);
-
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!isValid) return;
         setIsLoading(true);
-
-        try {
-            // API 호출
-            const patientCode = "PATIENT_CODE"; // 실제 환자 코드로 대체 필요
-            const response = await postDailyCheckInput(patientCode, diagnosisData);
-
-            // 응답 처리
-            if (response) {
-                setTimeout(() => {
-                    navigate('/diagnosis/result', { state: { data: response } });
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('일일 진단 제출 실패:', error);
-            // 에러 처리 로직 추가
-            setIsLoading(false);
-        }
+        setTimeout(() => {
+            navigate('/diagnosis/result');
+        }, 2000);
     };
 
     if (isLoading) {
         return (
             <Loading
+                spinnerSize="w-32 h-32"
                 message={
                     <>
                         진단 결과를<br />
@@ -97,16 +66,7 @@ const FinalChecklist = () => {
 
     return (
         <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
-            <div className="fixed top-0 left-0 right-0 bg-[#E9EEEA] z-50">
-                <div className="h-14 flex items-center justify-between px-4 border-b">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-                        ←
-                    </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 font-medium">
-                        일일 진단하기
-                    </span>
-                </div>
-            </div>
+            <DiagnosisHeader />
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 <h2 className="text-xl font-bold mb-8">
@@ -115,7 +75,7 @@ const FinalChecklist = () => {
 
                 {/* 아침 약 복용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3">아침 약 복용 여부</h3>
+                    <h3 className="text-gray-600 mb-3 ">아침 약 복용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '미완료', value: 'incomplete'},
@@ -128,7 +88,7 @@ const FinalChecklist = () => {
 
                 {/* 복용하는 약 부작용 여부 */}
                 <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3">복용하는 약 부작용 여부</h3>
+                    <h3 className="text-gray-600 mb-3 ">복용하는 약 부작용 여부</h3>
                     <HorizontalRadioGroup
                         options={[
                             {label: '있음', value: 'yes'},
@@ -136,6 +96,7 @@ const FinalChecklist = () => {
                         ]}
                         value={sideEffects}
                         onChange={setSideEffects}
+
                     />
                 </div>
 
@@ -153,7 +114,7 @@ const FinalChecklist = () => {
             </main>
 
             {/* 하단 버튼 */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#E9EEEA]">
+            <div className="left-0 right-0 pb-20 bg-[#E9EEEA]">
                 <div className="flex gap-3">
                     <button
                         onClick={() => navigate(-1)}

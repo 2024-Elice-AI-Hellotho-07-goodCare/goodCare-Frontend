@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {useDiagnosis} from "../../../context/DiagnosisContext";
+import DiagnosisHeader from "./DiagnosisHeader";
 
 const PhysicalChecklist = () => {
     const navigate = useNavigate();
     const [isValid, setIsValid] = useState(false);
-
-    const { updateDiagnosisData } = useDiagnosis();
 
     const [skinConditions, setSkinConditions] = useState({
         normal: false,
@@ -28,61 +26,15 @@ const PhysicalChecklist = () => {
         needHelp: false
     });
 
-    // 상태 매핑
-    const skinMapping = {
-        normal: 'NORMAL',
-        rash: 'RASH',
-        swelling: 'SWELLING',
-        bedsore: 'BEDSORE'
-    };
-
-    const painMapping = {
-        none: 'NONE',
-        mild: 'MILD',
-        moderate: 'MODERATE',
-        severe: 'SEVERE'
-    };
-
-    const mobilityMapping = {
-        normal: 'NORMAL',
-        limited: 'LIMITED',
-        needHelp: 'NEED_HELP'
-    };
-
     useEffect(() => {
+        // 각 섹션에서 하나 이상 선택되었는지 확인
         const hasSkinSelected = Object.values(skinConditions).some(value => value);
         const hasPainSelected = Object.values(painStatus).some(value => value);
         const hasMovementSelected = Object.values(movementStatus).some(value => value);
 
-        if (hasSkinSelected && hasPainSelected && hasMovementSelected) {
-            // Context 업데이트
-            let selectedSkin = '';
-            let selectedPain = '';
-            let selectedMobility = '';
-
-            // 선택된 값 찾기
-            Object.entries(skinConditions).forEach(([key, value]) => {
-                if (value) selectedSkin = skinMapping[key];
-            });
-
-            Object.entries(painStatus).forEach(([key, value]) => {
-                if (value) selectedPain = painMapping[key];
-            });
-
-            Object.entries(movementStatus).forEach(([key, value]) => {
-                if (value) selectedMobility = mobilityMapping[key];
-            });
-
-            updateDiagnosisData('physicalStatusDTO', {
-                skinCondition: selectedSkin,
-                painLevel: selectedPain,
-                painLocation: '', // 필요한 경우 별도의 입력 필드 추가
-                mobility: selectedMobility
-            });
-        }
-
+        // 모든 섹션에서 하나 이상 선택되어야 유효
         setIsValid(hasSkinSelected && hasPainSelected && hasMovementSelected);
-    }, [skinConditions, painStatus, movementStatus, updateDiagnosisData]);
+    }, [skinConditions, painStatus, movementStatus]);
 
     const CheckItem = ({ label, checked, onChange }) => (
         <button
@@ -103,16 +55,7 @@ const PhysicalChecklist = () => {
 
     return (
         <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
-            <div className="fixed top-0 left-0 right-0 bg-[#E9EEEA] z-50">
-                <div className="h-14 flex items-center justify-between px-4 border-b">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-                        ←
-                    </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 font-medium">
-                        일일 진단하기
-                    </span>
-                </div>
-            </div>
+            <DiagnosisHeader />
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 <h2 className="text-xl font-bold mb-8">
@@ -243,7 +186,7 @@ const PhysicalChecklist = () => {
             </main>
 
             {/* 하단 버튼 */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#E9EEEA]">
+            <div className=" left-0 right-0 pb-20 bg-[#E9EEEA]">
                 <div className="flex gap-3">
                     <button
                         onClick={() => navigate(-1)}

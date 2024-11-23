@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {useDiagnosis} from "../../../context/DiagnosisContext";
+import DiagnosisHeader from "./DiagnosisHeader";
 
 const DiagnosisChecklist = () => {
-    const { updateDiagnosisData } = useDiagnosis();
-
     const navigate = useNavigate();
     const [isValid, setIsValid] = useState(false);
 
@@ -22,57 +20,21 @@ const DiagnosisChecklist = () => {
         excited: false
     });
 
-    // 의식 수준 매핑
-    const consciousnessMapping = {
-        clear: 'CLEAR',
-        drowsy: 'DROWSY',
-        confused: 'CONFUSED',
-        semicoma: 'SEMICOMA'
-    };
-
-    // 행동 변화 매핑
-    const behaviorMapping = {
-        normal: 'SAME_AS_USUAL',
-        anxiety: 'ANXIETY',
-        depression: 'DEPRESSION',
-        excited: 'EXCITED'
-    };
-
-
     useEffect(() => {
+        // 각 섹션에서 하나 이상 선택되었는지 확인
         const hasConsciousnessSelected = Object.values(consciousnessLevel).some(value => value);
         const hasBehaviorSelected = Object.values(behaviorChanges).some(value => value);
 
-        if (hasConsciousnessSelected && hasBehaviorSelected) {
-            // Context 업데이트
-            let selectedConsciousness = '';
-            let selectedBehavior = '';
-
-            // 선택된 의식 수준 찾기
-            Object.entries(consciousnessLevel).forEach(([key, value]) => {
-                if (value) selectedConsciousness = consciousnessMapping[key];
-            });
-
-            // 선택된 행동 변화 찾기
-            Object.entries(behaviorChanges).forEach(([key, value]) => {
-                if (value) selectedBehavior = behaviorMapping[key];
-            });
-
-            updateDiagnosisData('consciousnessDTO', {
-                consciousnessLevel: selectedConsciousness,
-                moodBehaviour: selectedBehavior
-            });
-        }
-
+        // 두 섹션 모두에서 하나 이상 선택되어야 유효
         setIsValid(hasConsciousnessSelected && hasBehaviorSelected);
-    }, [consciousnessLevel, behaviorChanges, updateDiagnosisData]);
+    }, [consciousnessLevel, behaviorChanges]);
 
     const CheckItem = ({ label, checked, onChange }) => (
         <button
             onClick={onChange}
             className={`
                 w-full p-4 rounded-lg flex justify-between items-center mb-3
-                ${checked ? 'bg-[#E4EFE0]' : 'bg-[#E4EFE0]'}
+                ${checked ? 'bg-[#CDE5C5]' : 'bg-[#F6FFF3]'}
             `}
         >
             <span>{label}</span>
@@ -86,16 +48,7 @@ const DiagnosisChecklist = () => {
 
     return (
         <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
-            <div className="fixed top-0 left-0 right-0 bg-[#E9EEEA] z-50">
-                <div className="h-14 flex items-center justify-between px-4 border-b">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-                        ←
-                    </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 font-medium">
-                        일일 진단하기
-                    </span>
-                </div>
-            </div>
+     <DiagnosisHeader/>
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 <h2 className="text-xl font-bold mb-8">
@@ -103,8 +56,8 @@ const DiagnosisChecklist = () => {
                 </h2>
 
                 {/* 의식 수준 섹션 */}
-                <div className="mb-8">
-                    <h3 className="text-gray-600 mb-3">의식 수준</h3>
+                <div className="mb-8 pt-20">
+                    <h3 className="text-gray-600 mb-3 ">의식 수준</h3>
                     <CheckItem
                         label="명료해요"
                         checked={consciousnessLevel.clear}
@@ -218,7 +171,7 @@ const DiagnosisChecklist = () => {
             </main>
 
             {/* 하단 버튼 */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#E9EEEA]">
+            <div className="left-0 right-0 pb-20 bg-[#E9EEEA]">
                 <div className="flex gap-3">
                     <button
                         onClick={() => navigate(-1)}

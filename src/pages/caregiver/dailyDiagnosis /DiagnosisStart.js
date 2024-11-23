@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DiagnosisHeader from "./DiagnosisHeader";
 
 const DiagnosisStart = () => {
     const navigate = useNavigate();
@@ -14,17 +15,8 @@ const DiagnosisStart = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#F4F7E8] flex flex-col">
-            <div className="fixed top-0 left-0 right-0 bg-white z-50">
-                <div className="h-14 flex items-center justify-between px-4 border-b bg-[#F4F7E8]">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-                        ←
-                    </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 font-medium ">
-                        일일 진단하기
-                    </span>
-                </div>
-            </div>
+        <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
+            <DiagnosisHeader />
 
             {showWelcome ? (
                 // First screen (3-second splash)
@@ -55,7 +47,7 @@ const DiagnosisStart = () => {
                         </div>
                     </div>
 
-                    <div className="w-full pb-8">
+                    <div className="w-full pb-20">
                         <button
                             onClick={() => navigate('/diagnosis/input')}
                             className="w-full py-4 bg-[#496E1B] rounded-xl text-white font-medium

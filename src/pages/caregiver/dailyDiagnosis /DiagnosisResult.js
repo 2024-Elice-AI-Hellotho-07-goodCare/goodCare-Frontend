@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import DiagnosisHeader from "./DiagnosisHeader";
 
 const DiagnosisResult = () => {
     const navigate = useNavigate();
@@ -7,16 +8,7 @@ const DiagnosisResult = () => {
     return (
         <div className="min-h-screen bg-[#E9EEEA] flex flex-col">
             {/* Header */}
-            <div className="fixed top-0 left-0 right-0 bg-[#E9EEEA] z-50">
-                <div className="h-14 flex items-center justify-between px-4 border-b">
-                    <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-                        ←
-                    </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 font-medium">
-                        진단 결과
-                    </span>
-                </div>
-            </div>
+            <DiagnosisHeader />
 
             <main className="flex-1 px-4 pt-20 pb-24">
                 {/* Character Image */}
